@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>Pest ID Nursery - AI Pest Identifier</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            font-family: 'Poppins', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #e8f0e3;
+            padding: 16px;
+        }
+        .container {
+            max-width: 650px;
+            width: 100%;
+            background: white;
+            border-radius: 30px;
+            padding: 24px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        .logo-header {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid rgba(60, 110, 58, 0.15);
+        }
+        .logo-header img {
+            height: 80px;
+            width: auto;
+            border-radius: 16px;
+            margin-bottom: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .logo-header .title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #2d4a2a;
+            line-height: 1.2;
+        }
+        .logo-header .title i { color: #5f7a4a; }
+        .logo-header .tagline {
+            font-size: 0.85rem;
+            color: #5b6e4e;
+            font-weight: 400;
+        }
+        .header-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 6px;
+        }
+        .header-actions button {
+            background: none;
+            border: none;
+            font-size: 1.3rem;
+            cursor: pointer;
+            color: #3a5535;
+            padding: 6px 10px;
+            border-radius: 50%;
+            transition: 0.2s;
+        }
+        .header-actions button:hover {
+            background: rgba(140, 170, 120, 0.2);
+        }
+        .subtitle {
+            color: #5b6e4e;
+            font-size: 0.85rem;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+        .upload-area {
+            border: 2px dashed #b8c8a8;
+            border-radius: 20px;
+            padding: 20px;
+            text-align: center;
+            background: #f5f9f0;
+        }
+        .preview-img {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 15px;
+            display: none;
+            margin: 10px 0;
+        }
+        .btn-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 12px;
+        }
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 50px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.9rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: 0.2s;
+        }
+        .btn-primary { background: #3c6e3a; color: white; }
+        .btn-primary:hover { background: #2f5e2d; }
+        .btn-outline { background: transparent; color: #2d4a2a; border: 2px solid #5d7a4a; }
+        .btn-outline:hover { background: #3c6e3a20; }
+        .file-input { display: none; }
+        .loading-area {
+            display: none;
+            margin: 16px 0;
+            text-align: center;
+        }
+        .loading-area.active { display: block; }
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background: #d0d8c0;
+            border-radius: 20px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #6d9e5a, #3f7540);
+            border-radius: 20px;
+            transition: width 0.3s;
+        }
+        .loader-text {
+            font-size: 0.9rem;
+            color: #3f5a35;
+        }
+        .result-card {
+            display: none;
+            margin-top: 20px;
+            background: #f5f9f0;
+            border-radius: 20px;
+            padding: 20px;
+            animation: fadeSlide 0.4s ease;
+        }
+        .result-card.visible { display: block; }
+        @keyframes fadeSlide {
+            0% { opacity:0; transform:translateY(10px); }
+            100% { opacity:1; transform:translateY(0); }
+        }
+        .result-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 12px;
+        }
+        .result-icon {
+            width: 60px;
+            height: 60px;
+            background: #d4dcc8;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+        }
+        .pest-name { font-size: 1.5rem; font-weight: 700; color: #1d3a1a; }
+        .badge {
+            background: #3c7a3a;
+            color: white;
+            padding: 4px 16px;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        .info-box {
+            background: rgba(210, 200, 175, 0.2);
+            padding: 12px 16px;
+            border-radius: 15px;
+            margin: 8px 0;
+            border-left: 4px solid #6d8f5a;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+        .info-box img {
+            max-width: 100%;
+            max-height: 150px;
+            border-radius: 10px;
+            margin: 8px 0;
+            display: block;
+        }
+        .info-box .img-label {
+            font-size: 0.7rem;
+            color: #5b6e4e;
+            display: block;
+            margin-bottom: 4px;
+            font-weight: 600;
+        }
+        .info-label {
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: #5f7a4a;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .action-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 12px;
+        }
+        .btn-small {
+            padding: 8px 18px;
+            border: none;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-shopee { background: #ee4d2d; color: white; }
+        .btn-shopee:hover { background: #d63f21; }
+        .btn-outline-sm { background: transparent; color: #2d4a2a; border: 2px solid #5d7a4a; }
+        .btn-outline-sm:hover { background: rgba(60, 110, 58, 0.1); }
+        .btn-speak { background: #4a6a8a; color: white; }
+        .btn-speak:hover { background: #3a5a7a; }
+        .btn-speak-stop { background: #a04040; color: white; }
+        .btn-speak-stop:hover { background: #802a2a; }
+        .btn-share { background: #25a35a; color: white; }
+        .btn-share:hover { background: #1a8a4a; }
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 0.75rem;
+            color: #5b6e4e;
+            border-top: 1px solid #ddd;
+            padding-top: 14px;
+        }
+        .demo-note {
+            text-align: center;
+            font-size: 0.7rem;
+            color: #7a8a6a;
+            font-style: italic;
+            margin-top: 6px;
+        }
+        #status {
+            font-size: 0.8rem;
+            color: #5b6e4e;
+        }
+        .speech-status {
+            font-size: 0.7rem;
+            color: #4a6a8a;
+            margin-left: 6px;
+        }
+        @media (max-width: 500px) {
+            .container { padding: 16px; }
+            .logo-header img { height: 60px; }
+            .logo-header .title { font-size: 1.4rem; }
+            .btn { padding: 10px 18px; font-size: 0.8rem; min-width: 100px; }
+            .info-box { font-size: 0.8rem; }
+            .info-box img { max-height: 100px; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="logo-header">
+        <img id="logoImage" src="logo.jpg" alt="Pest ID Nursery Logo" onerror="this.style.display='none'">
+        <div class="title"><i class="fas fa-bug"></i> Pest ID Nursery</div>
+        <div class="tagline">Oil Palm Nursery Pest Identifier</div>
+        <div class="header-actions">
+            <button onclick="toggleDark()" title="Toggle Dark Mode">🌙</button>
+            <button onclick="resetApp()" title="Reset" style="color:#d63f21;"><i class="fas fa-redo"></i></button>
+        </div>
+    </div>
+    <div class="subtitle">Status: <span id="status">Ready</span></div>
+
+    <div class="upload-area">
+        <img id="preview" class="preview-img" src="" alt="Preview">
+        <div id="placeholder" style="font-size:2.5rem;color:#6f8f5a;padding:10px 0;"><i class="fas fa-bug"></i></div>
+        <div class="btn-group">
+            <label for="fileInput" class="btn btn-primary"><i class="fas fa-upload"></i> Upload Image</label>
+            <input type="file" id="fileInput" class="file-input" accept="image/*">
+            <button class="btn btn-outline" onclick="resetApp()"><i class="fas fa-redo"></i> Reset</button>
+        </div>
+    </div>
+
+    <div class="loading-area" id="loadingArea">
+        <div class="loader-text"><i class="fas fa-spinner fa-pulse"></i> Analyzing image...</div>
+        <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    </div>
+
+    <div class="result-card" id="resultCard">
+        <div class="result-header">
+            <div class="result-icon" id="resultIcon"><i class="fas fa-bug"></i></div>
+            <div>
+                <div class="pest-name" id="pestName">-</div>
+                <span class="badge" id="accuracyBadge">-</span>
+            </div>
+        </div>
+        <div>
+            <div class="info-label"><i class="fas fa-magnifying-glass"></i> SIGNS OF DAMAGE</div>
+            <div class="info-box" id="signsBox">
+                <span class="img-label">📸 Damage Example:</span>
+                <img id="damageImage" src="" alt="Damage Image">
+                <div id="signsText">-</div>
+            </div>
+        </div>
+        <div>
+            <div class="info-label"><i class="fas fa-shield-halved"></i> CONTROL METHODS</div>
+            <div class="info-box" id="controlBox">-</div>
+        </div>
+        <div>
+            <div class="info-label"><i class="fas fa-flask"></i> RECOMMENDED PRODUCTS</div>
+            <div class="info-box" id="productBox">
+                <span class="img-label">🧴 Product Image:</span>
+                <img id="productImage" src="" alt="Product Image">
+                <div id="productText">-</div>
+            </div>
+        </div>
+        <div class="action-row">
+            <a id="shopeeLink" href="#" target="_blank" class="btn-small btn-shopee"><i class="fas fa-cart-shopping"></i> Buy on Shopee</a>
+            <button class="btn-small btn-speak" id="speakBtn" onclick="speakResult()"><i class="fas fa-play"></i> Listen</button>
+            <button class="btn-small btn-speak-stop" onclick="stopSpeech()"><i class="fas fa-stop"></i> Stop</button>
+            <button class="btn-small btn-share" onclick="shareResult()"><i class="fas fa-share-alt"></i> Share</button>
+        </div>
+        <div id="speechStatus" class="speech-status" style="margin-top:6px;text-align:center;"></div>
+    </div>
+
+    <div class="footer">Pest ID Nursery — Prototype for FPA405 Group Project</div>
+    <div class="demo-note">*Powered by AI</div>
+</div>
+
+<script>
+// =============================================
+// 1. PEST DATABASE - GAMBAR TERUS DALAM FOLDER UTAMA
+// =============================================
+const PESTS = [
+    {
+        name: "ADORETUS",
+        icon: "fa-bug",
+        damageImage: "adoretus_damage.jpg",
+        productImage: "adoretus_product.jpg",
+        signs: "Adoretus beetles (rose beetles) are nocturnal feeders that attack young oil palm leaves at night, then hide in the soil or leaf litter during the day, making them hard to spot on inspection. Early feeding produces small, irregular holes scattered between the leaf veins. As feeding continues, only the leaf veins remain, giving the leaf a lace-like or 'skeletonized' appearance. In heavier infestations, damaged tissue dries up and turns brown, and severely attacked seedlings show extensive defoliation that slows growth and weakens overall seedling vigor.",
+        control: "Foliar Sprays (Adults): Carbaryl (e.g., 85% WP) is highly effective against adult beetles, applied at roughly 40-60 g per 20 litres of water, sprayed thoroughly across the foliage at 7- to 14-day intervals during an outbreak. Since Adoretus beetles are night feeders and attracted to light, spraying in the late evening improves contact with active beetles, and light traps can be used near the nursery to draw adults away from seedlings. Clearing weeds and alternate host plants around the nursery reduces beetle breeding sites, and rotating insecticide active ingredients helps prevent resistance from building up.",
+        product: "Nurelle-D 505EC",
+        shopee: "https://my.shp.ee/vc4bhbvD"
+    },
+    {
+        name: "APHIDS",
+        icon: "fa-bug",
+        damageImage: "aphids_damage.jpg",
+        productImage: "aphids_product.jpg",
+        signs: "Aphids cluster in colonies on young, tender leaflets and shoots where they pierce the plant tissue and feed on sap. Affected leaflets become curled, twisted, and distorted as they grow. The aphids excrete sticky honeydew as they feed, which coats the leaf surface and encourages the growth of black sooty mould, giving leaves a dirty, blackened appearance. Honeydew also attracts ants, which protect the aphid colonies from natural predators. Heavy or prolonged infestations stunt new growth and can weaken seedling vigor over time.",
+        control: "Apply a systemic foliar insecticide (e.g., imidacloprid-based products such as Confidor 200 SL) so the chemical is absorbed into the plant tissue and eliminates aphids as they feed on the sap. Ensure spray coverage reaches the undersides and curled parts of young leaves where colonies hide. Monitor seedlings regularly, especially new flushes, since aphid populations can build up quickly. Avoid excessive nitrogen fertilization, as lush new growth attracts aphids, and where possible conserve natural predators such as ladybird beetles that help keep populations in check.",
+        product: "Confidor 200 SL",
+        shopee: "https://my.shp.ee/FxGiDxJJ"
+    },
+    {
+        name: "ARMY WORM",
+        icon: "fa-bug",
+        damageImage: "armyworm_damage.jpg",
+        productImage: "armyworm_product.jpg",
+        signs: "Armyworm caterpillars are mainly nocturnal and feed in groups, causing damage to appear suddenly and spread rapidly across a nursery. Leaflets are heavily eaten from the edges inward, leaving large, irregular bite marks. In severe infestations, seedlings are stripped down to just the central midribs (skeletonization). Dark green or black droppings (frass) are often visible on leaves or the ground beneath affected plants, and larvae typically curl up tightly when disturbed.",
+        control: "Foliar spraying with a contact and stomach insecticide, or a biological Bacillus thuringiensis (Bt) product such as Dipel ES, targets the caterpillars directly and is most effective when applied while larvae are still small (early instar stage). Inspect seedlings regularly for egg masses and young larvae so treatment can begin before major defoliation occurs. Handpicking is practical for light, localized infestations, and keeping the nursery free of weeds reduces alternative feeding and egg-laying sites for moths.",
+        product: "Dipel ES",
+        shopee: "https://my.shp.ee/YvNTi3tL"
+    },
+    {
+        name: "GRASSHOPPER",
+        icon: "fa-bug",
+        damageImage: "grasshopper_damage.jpg",
+        productImage: "grasshopper_product.jpg",
+        signs: "Grasshoppers chew large, clean-cut, semi-circular bites along the margins of young leaves and fronds, often leaving only the hard central stems behind. Damage is usually most visible on the newest, tenderest leaves. Grasshoppers are active and mobile during the day, moving quickly between seedlings, and in high-population periods they can migrate into a nursery in large numbers and cause damage very quickly.",
+        control: "Foliar spraying with a fast-acting contact insecticide (e.g., deltamethrin-based products such as Decis 2.5EC) eliminates grasshoppers on contact as they feed. Spot-treat heavily affected areas first since grasshoppers tend to concentrate in patches. Monitoring surrounding grassy areas and field margins, where grasshoppers commonly breed, helps anticipate and prevent them from migrating into the nursery, and physical barriers or netting can offer additional protection for high-value seedlings.",
+        product: "Decis 2.5EC",
+        shopee: "https://my.shp.ee/itVnatZV"
+    },
+    {
+        name: "MAHASENA CORBETTI",
+        icon: "fa-bug",
+        damageImage: "mahasena_damage.jpg",
+        productImage: "mahasena_product.jpg",
+        signs: "Mahasena corbetti (bagworm) larvae construct and live inside small, conical, cone-shaped silk cases (bags) that they carry and attach to the undersides of fronds, making them a distinctive pest to identify. Larvae feed by chewing small, neat holes through the leaves, and as feeding continues these holes merge into large brown, dried patches. In severe infestations, fronds can become extensively defoliated, significantly reducing the seedling's photosynthetic capacity and growth.",
+        control: "Systemic or contact foliar spraying (suitable for nursery seedlings) allows larvae to ingest the poison as they chew on leaves. Where infestation levels are low, manually removing and destroying the silk bags by hand is an effective and low-cost control method. Regular scouting is important because the protective bag can shield larvae from spray contact, so thorough coverage and repeat applications may be needed. Conserving natural parasitoids that attack bagworm larvae also helps suppress populations over time.",
+        product: "Dipel ES",
+        shopee: "https://my.shp.ee/YvNTi3tL"
+    },
+    {
+        name: "RED SPIDER MITE",
+        icon: "fa-bug",
+        damageImage: "redspider_damage.jpg",
+        productImage: "redspider_product.jpg",
+        signs: "Red spider mite damage first appears as yellow to white speckling (stippling) on the upper leaf surface, caused by the mites piercing leaf cells to feed. Fine, silk-like webbing can often be seen on the underside of affected leaves, especially in heavier infestations. As damage progresses, leaves take on a dull, bronzed appearance and may dry out and drop prematurely. Mites are tiny and can be difficult to see without a hand lens, and populations build up fastest during hot, dry weather.",
+        control: "Spray an abamectin-based insecticide/acaricide (e.g., Vertimec 1.8 EC) to control mite populations, ensuring good coverage of the leaf undersides where mites concentrate. Rotate between different miticide active ingredients to reduce the risk of resistance developing. Since mites thrive under dry, water-stressed conditions, maintaining adequate irrigation and humidity in the nursery can help slow their build-up. Regular weekly monitoring, particularly during dry periods, allows early detection before populations become severe.",
+        product: "Vertimec® 1.8 EC",
+        shopee: "https://my.shp.ee/NtwgAWCq"
+    },
+    {
+        name: "SETORA NITENS",
+        icon: "fa-bug",
+        damageImage: "setora_damage.jpg",
+        productImage: "setora_product.jpg",
+        signs: "Setora nitens (nettle caterpillar) larvae feed heavily on leaf tissue, often leaving only the midrib behind in severely attacked leaflets. Feeding typically progresses quickly once larvae reach later instars, causing noticeable defoliation that reduces palm vigor and yield potential. These caterpillars have urticating (stinging) spines that can cause painful skin irritation if touched, so larvae are often seen resting in small clusters on the underside of leaves during the day.",
+        control: "Spray a chlorantraniliprole-based insecticide (e.g., Tracer 120 SC) to control larvae, targeting young instars for best results before major defoliation occurs. Because of their stinging spines, avoid direct handling of larvae during scouting or manual removal, and use gloves or tools if handpicking is necessary. Regular monitoring for egg masses and young larvae clusters allows early intervention, and conserving natural parasitic wasps that attack this pest can help reduce future outbreaks.",
+        product: "Tracer® 120 SC",
+        shopee: "https://my.shp.ee/BdRhSJjm"
+    },
+    {
+        name: "SNAIL",
+        icon: "fa-bug",
+        damageImage: "snail_damage.jpg",
+        productImage: "snail_product.jpg",
+        signs: "Snails feed mainly at night or during humid, wet conditions, chewing irregular holes on young, tender leaves. A tell-tale sign of snail activity is the silvery slime trail left on leaves and around the base of seedlings. During the day, snails typically hide under leaf litter, debris, or in moist, shaded spots around the nursery, only to re-emerge and resume feeding once conditions turn humid or wet again.",
+        control: "Apply metaldehyde 5% bait around the affected area to attract and kill snails. Removing leaf litter, weeds, and other debris around seedlings eliminates hiding places and reduces snail populations over time. Managing excess moisture and improving drainage in the nursery also makes conditions less favourable for snails. Hand-collecting snails at night, when they are most active, and using physical barriers (such as ash or copper tape around beds) can provide additional protection for young seedlings.",
+        product: "Esaro® Snail Killer",
+        shopee: "https://my.shp.ee/XhMHRQRA"
+    }
+];
+
+// =============================================
+// 2. STATE
+// =============================================
+let currentIndex = 0;
+let currentPest = null;
+let speechSynth = window.speechSynthesis;
+let isSpeaking = false;
+
+// =============================================
+// 3. DOM REFERENCES
+// =============================================
+const fileInput = document.getElementById('fileInput');
+const preview = document.getElementById('preview');
+const placeholder = document.getElementById('placeholder');
+const loadingArea = document.getElementById('loadingArea');
+const progressFill = document.getElementById('progressFill');
+const resultCard = document.getElementById('resultCard');
+const resultIcon = document.getElementById('resultIcon');
+const pestName = document.getElementById('pestName');
+const damageImage = document.getElementById('damageImage');
+const productImage = document.getElementById('productImage');
+const signsText = document.getElementById('signsText');
+const controlBox = document.getElementById('controlBox');
+const productText = document.getElementById('productText');
+const accuracyBadge = document.getElementById('accuracyBadge');
+const shopeeLink = document.getElementById('shopeeLink');
+const status = document.getElementById('status');
+const speakBtn = document.getElementById('speakBtn');
+const speechStatus = document.getElementById('speechStatus');
+
+// =============================================
+// 4. FUNCTIONS
+// =============================================
+function showLoading() {
+    loadingArea.classList.add('active');
+    progressFill.style.width = '0%';
+    resultCard.classList.remove('visible');
+}
+
+function hideLoading() {
+    loadingArea.classList.remove('active');
+}
+
+function animateProgress() {
+    let progress = 0;
+    const interval = setInterval(() => {
+        progress += Math.floor(Math.random() * 12) + 3;
+        if (progress >= 100) {
+            progress = 100;
+            clearInterval(interval);
+        }
+        progressFill.style.width = Math.min(progress, 100) + '%';
+    }, 120);
+    return interval;
+}
+
+function showResult(pest) {
+    currentPest = pest;
+    
+    resultIcon.innerHTML = `<i class="fas ${pest.icon}"></i>`;
+    pestName.textContent = pest.name;
+    
+    damageImage.src = pest.damageImage;
+    damageImage.alt = pest.name + ' damage';
+    damageImage.onerror = function() {
+        this.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="150"%3E%3Crect width="200" height="150" fill="%23f0f0f0"/%3E%3Ctext x="50" y="80" font-family="Arial" font-size="14" fill="%23999"%3ENo Image%3C/text%3E%3C/svg%3E';
+    };
+    signsText.textContent = pest.signs;
+    
+    controlBox.textContent = pest.control;
+    
+    productImage.src = pest.productImage;
+    productImage.alt = pest.name + ' product';
+    productImage.onerror = function() {
+        this.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="150"%3E%3Crect width="200" height="150" fill="%23f0f0f0"/%3E%3Ctext x="50" y="80" font-family="Arial" font-size="14" fill="%23999"%3ENo Image%3C/text%3E%3C/svg%3E';
+    };
+    productText.textContent = pest.product;
+    
+    shopeeLink.href = pest.shopee;
+    
+    const accuracy = Math.floor(Math.random() * 14) + 85;
+    accuracyBadge.textContent = accuracy + '% confidence';
+    
+    resultCard.classList.add('visible');
+    resultCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    speechStatus.textContent = '';
+}
+
+function processImage(imgSrc) {
+    preview.src = imgSrc;
+    preview.style.display = 'block';
+    placeholder.style.display = 'none';
+    
+    showLoading();
+    resultCard.classList.remove('visible');
+    
+    const interval = animateProgress();
+    const pestIndex = currentIndex % PESTS.length;
+    const pest = PESTS[pestIndex];
+    
+    setTimeout(() => {
+        clearInterval(interval);
+        progressFill.style.width = '100%';
+        
+        setTimeout(() => {
+            hideLoading();
+            showResult(pest);
+            currentIndex++;
+            status.textContent = 'Ready';
+        }, 300);
+    }, 1800);
+}
+
+function resetApp() {
+    currentIndex = 0;
+    currentPest = null;
+    stopSpeech();
+    
+    resultCard.classList.remove('visible');
+    loadingArea.classList.remove('active');
+    progressFill.style.width = '0%';
+    preview.style.display = 'none';
+    placeholder.style.display = 'block';
+    preview.src = '';
+    status.textContent = 'Ready';
+    speechStatus.textContent = '';
+    
+    damageImage.src = '';
+    productImage.src = '';
+}
+
+// =============================================
+// 5. SPEECH FUNCTIONS
+// =============================================
+function speakResult() {
+    if (!currentPest) {
+        alert('Please upload an image first.');
+        return;
+    }
+    
+    if (isSpeaking) {
+        stopSpeech();
+    }
+    
+    const text = `Pest: ${currentPest.name}. Signs of damage: ${currentPest.signs}. Control methods: ${currentPest.control}. Recommended product: ${currentPest.product}.`;
+    
+    if ('speechSynthesis' in window) {
+        speechSynth.cancel();
+        
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'en-US';
+        utterance.rate = 0.85;
+        utterance.pitch = 1;
+        
+        isSpeaking = true;
+        speechStatus.textContent = '🔊 Speaking...';
+        speakBtn.innerHTML = '<i class="fas fa-pause"></i> Listen';
+        
+        utterance.onend = function() {
+            isSpeaking = false;
+            speechStatus.textContent = '✅ Done reading';
+            speakBtn.innerHTML = '<i class="fas fa-play"></i> Listen';
+        };
+        
+        utterance.onerror = function() {
+            isSpeaking = false;
+            speechStatus.textContent = '❌ Reading error';
+            speakBtn.innerHTML = '<i class="fas fa-play"></i> Listen';
+        };
+        
+        speechSynth.speak(utterance);
+    } else {
+        alert('Text-to-speech is not supported in this browser.');
+    }
+}
+
+function stopSpeech() {
+    if ('speechSynthesis' in window) {
+        speechSynth.cancel();
+        isSpeaking = false;
+        speechStatus.textContent = '⏹️ Stopped';
+        speakBtn.innerHTML = '<i class="fas fa-play"></i> Listen';
+    }
+}
+
+// =============================================
+// 6. EVENT LISTENERS
+// =============================================
+fileInput.addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = function(ev) {
+        processImage(ev.target.result);
+    };
+    reader.readAsDataURL(file);
+    fileInput.value = '';
+});
+
+// =============================================
+// 7. SHARE
+// =============================================
+function shareResult() {
+    if (!currentPest) {
+        alert('Please upload an image first.');
+        return;
+    }
+    const text = `🌴 Pest ID Nursery\n\nPest: ${currentPest.name}\n\nSigns of Damage:\n${currentPest.signs}\n\nControl Methods:\n${currentPest.control}\n\nRecommended Product:\n${currentPest.product}`;
+    if (navigator.share) {
+        navigator.share({ title: 'Pest ID Nursery', text: text });
+    } else {
+        window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
+    }
+}
+
+// =============================================
+// 8. DARK MODE
+// =============================================
+function toggleDark() {
+    const isDark = document.body.style.background === '#1e2a1c';
+    document.body.style.background = isDark ? '#e8f0e3' : '#1e2a1c';
+    const container = document.querySelector('.container');
+    container.style.background = isDark ? 'white' : '#2c3a28';
+    container.style.color = isDark ? 'black' : '#f0efe7';
+}
+
+// =============================================
+// 9. INIT
+// =============================================
+resetApp();
+console.log('🚀 Pest ID Nursery - Ready!');
+console.log('📋 8 pests loaded:');
+PESTS.forEach((p, i) => console.log(`   ${i+1}. ${p.name}`));
+</script>
+</body>
+</html>
